@@ -1,3 +1,3 @@
-# learn-app-back-end
+# learn-backend
 Learn fundamental Node.js
 Learn about GIT
