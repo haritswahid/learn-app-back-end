@@ -1,29 +1,34 @@
 const ClientError = require('../../exceptions/ClientError');
 
-class NotesHandler {
-  constructor(service, validator) {
-    this.service = service;
+class AuthenticationsHandler {
+  constructor(authenticationsService, usersService, tokenManager, validator) {
+    this.authenticationsService = authenticationsService;
+    this.usersService = usersService;
+    this.tokenManager = tokenManager;
     this.validator = validator;
 
-    this.postNoteHandler = this.postNoteHandler.bind(this);
-    this.getNotesHandler = this.getNotesHandler.bind(this);
-    this.getNoteByIdHandler = this.getNoteByIdHandler.bind(this);
-    this.putNoteByIdHandler = this.putNoteByIdHandler.bind(this);
-    this.deleteNoteByIdHandler = this.deleteNoteByIdHandler.bind(this);
+    this.postAuthenticationHandler = this.postAuthenticationHandler.bind(this);
+    this.putAuthenticationHandler = this.putAuthenticationHandler.bind(this);
+    this.deleteAuthenticationHandler = this.deleteAuthenticationHandler.bind(this);
   }
 
-  async postNoteHandler(request, h) {
+  async postAuthenticationHandler(request, h) {
     try {
-      this.validator.validateNotePayload(request.payload);
-      const { title = 'untitled', body, tags } = request.payload;
+      this.validator.validatePostAuthenticationPayload(request.payload);
+      const { username, password } = request.payload;
+      const id = await this.usersService.verifyUserCredential(username, password);
 
-      const noteId = await this.service.addNote({ title, body, tags });
+      const accessToken = this.tokenManager.generateAccessToken({ id });
+      const refreshToken = this.tokenManager.generateRefreshToken({ id });
+
+      await this.authenticationsService.addRefreshToken(refreshToken);
 
       const response = h.response({
         status: 'success',
-        message: 'Catatan berhasil ditambahkan',
+        message: 'Authentication berhasil ditambahkan',
         data: {
-          noteId,
+          accessToken,
+          refreshToken,
         },
       });
       response.code(201);
@@ -49,24 +54,20 @@ class NotesHandler {
     }
   }
 
-  async getNotesHandler() {
-    const notes = await this.service.getNotes();
-    return {
-      status: 'success',
-      data: {
-        notes,
-      },
-    };
-  }
-
-  async getNoteByIdHandler(request, h) {
+  async putAuthenticationHandler(request, h) {
     try {
-      const { id } = request.params;
-      const note = await this.service.getNoteById(id);
+      this.validator.validatePutAuthenticationPayload(request.payload);
+
+      const { refreshToken } = request.payload;
+      await this.authenticationsService.verifyRefreshToken(refreshToken);
+      const { id } = this.tokenManager.verifyRefreshToken(refreshToken);
+
+      const accessToken = this.tokenManager.generateAccessToken({ id });
       return {
         status: 'success',
+        message: 'Access Token berhasil diperbarui',
         data: {
-          note,
+          accessToken,
         },
       };
     } catch (error) {
@@ -90,46 +91,17 @@ class NotesHandler {
     }
   }
 
-  async putNoteByIdHandler(request, h) {
+  async deleteAuthenticationHandler(request, h) {
     try {
-      this.validator.validateNotePayload(request.payload);
-      const { title, body, tags } = request.payload;
-      const { id } = request.params;
+      this.validator.validateDeleteAuthenticationPayload(request.payload);
 
-      await this.service.editNoteById(id, { title, body, tags });
+      const { refreshToken } = request.payload;
+      await this.authenticationsService.verifyRefreshToken(refreshToken);
+      await this.authenticationsService.deleteRefreshToken(refreshToken);
 
       return {
         status: 'success',
-        message: 'Catatan berhasil diperbarui',
-      };
-    } catch (error) {
-      if (error instanceof ClientError) {
-        const response = h.response({
-          status: 'fail',
-          message: error.message,
-        });
-        response.code(error.statusCode);
-        return response;
-      }
-
-      // Server ERROR!
-      const response = h.response({
-        status: 'error',
-        message: 'Maaf, terjadi kegagalan pada server kami.',
-      });
-      response.code(500);
-      console.error(error);
-      return response;
-    }
-  }
-
-  async deleteNoteByIdHandler(request, h) {
-    try {
-      const { id } = request.params;
-      await this.service.deleteNoteById(id);
-      return {
-        status: 'success',
-        message: 'Catatan berhasil dihapus',
+        message: 'Refresh token berhasil dihapus',
       };
     } catch (error) {
       if (error instanceof ClientError) {
@@ -153,4 +125,4 @@ class NotesHandler {
   }
 }
 
-module.exports = NotesHandler;
+module.exports = AuthenticationsHandler;
