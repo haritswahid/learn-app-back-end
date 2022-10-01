@@ -17,14 +17,4 @@ const mapDBToModel = ({
   updatedAt: updated_at,
 });
 
-const mapDBToModelUsers = ({
-  id,
-  username,
-  fullname,
-}) => ({
-  id,
-  username,
-  fullname,
-});
-
-module.exports = { mapDBToModel, mapDBToModelUsers };
+module.exports = { mapDBToModel };
