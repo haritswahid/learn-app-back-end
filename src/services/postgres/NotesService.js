@@ -4,12 +4,11 @@ const AuthorizationError = require('../../exceptions/AuthorizationError');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
-const CollaborationsService = require('./CollaborationsService');
 
 class NotesService {
-  constructor() {
+  constructor(collaborationService) {
     this.pool = new Pool();
-    this.collaborationService = CollaborationsService;
+    this.collaborationService = collaborationService;
   }
 
   async addNote({
