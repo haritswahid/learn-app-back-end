@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 const mapDBToModel = ({
+  username,
   id,
   title,
   body,
@@ -7,6 +8,7 @@ const mapDBToModel = ({
   created_at,
   updated_at,
 }) => ({
+  username,
   id,
   title,
   body,
