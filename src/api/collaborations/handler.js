@@ -59,9 +59,9 @@ class CollaborationsHandler {
 
       const response = h.response({
         status: 'success',
-        message: 'Kolaborasi berhasil ditambahkan',
+        message: 'Kolaborasi berhasil dihapus',
       });
-      response.code(201);
+      response.code(200);
       return response;
     } catch (error) {
       if (error instanceof ClientError) {
