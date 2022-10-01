@@ -136,7 +136,7 @@ class NotesHandler {
       const { id } = request.params;
       const { id: credentialId } = request.auth.credentials;
 
-      await this.service.verifyNoteAccess(id, credentialId);
+      await this.service.verifyNoteOwner(id, credentialId);
       await this.service.deleteNoteById(id);
       return {
         status: 'success',
