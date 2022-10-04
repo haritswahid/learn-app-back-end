@@ -130,4 +130,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-src/api/uploads/file/images/
+src/api/uploads/file/
